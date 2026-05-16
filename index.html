@@ -158,15 +158,15 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
     <!-- Strain chart -->
-    <div class="glass rounded-2xl p-5">
-      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-4">Strain – 7 dagen</p>
-      <canvas id="strainChart" height="140"></canvas>
+    <div class="glass rounded-2xl p-4">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">Strain – 7 dagen</p>
+      <canvas id="strainChart" height="90"></canvas>
     </div>
 
     <!-- HR chart -->
-    <div class="glass rounded-2xl p-5">
-      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-4">Gemiddelde hartslag – 7 dagen</p>
-      <canvas id="hrChart" height="140"></canvas>
+    <div class="glass rounded-2xl p-4">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">Gemiddelde hartslag – 7 dagen</p>
+      <canvas id="hrChart" height="90"></canvas>
     </div>
 
   </div>
@@ -320,9 +320,10 @@ function renderWHOOP(w) {
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
+      layout: { padding: 0 },
       scales: {
-        y: { min: 0, max: 21, grid: { color: 'rgba(255,255,255,0.04)' } },
-        x: { grid: { display: false } }
+        y: { min: 0, max: 21, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 }, maxTicksLimit: 4 } },
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
       }
     }
   });
@@ -337,7 +338,7 @@ function renderWHOOP(w) {
         borderColor: '#f97316',
         backgroundColor: 'rgba(249,115,22,0.1)',
         borderWidth: 2,
-        pointRadius: 4,
+        pointRadius: 3,
         pointBackgroundColor: '#f97316',
         fill: true,
         tension: 0.4,
@@ -346,9 +347,10 @@ function renderWHOOP(w) {
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
+      layout: { padding: 0 },
       scales: {
-        y: { grid: { color: 'rgba(255,255,255,0.04)' } },
-        x: { grid: { display: false } }
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 }, maxTicksLimit: 4 } },
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
       }
     }
   });
