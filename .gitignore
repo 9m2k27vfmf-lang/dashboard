@@ -1,0 +1,13 @@
+# Secrets & tokens
+.whoop_token.json
+.env
+
+# Data (wordt lokaal gegenereerd)
+data.json
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store

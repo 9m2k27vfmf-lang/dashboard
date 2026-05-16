@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * { font-family: 'Inter', sans-serif; }
+
+    body {
+      background: #0a0a0f;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    .glass {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+    }
+
+    .glow-purple { box-shadow: 0 0 30px rgba(139,92,246,0.15); }
+    .glow-green  { box-shadow: 0 0 30px rgba(16,185,129,0.15); }
+    .glow-blue   { box-shadow: 0 0 30px rgba(59,130,246,0.15); }
+    .glow-orange { box-shadow: 0 0 30px rgba(251,146,60,0.15); }
+
+    .ring-score {
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+
+    .score-text { font-size: 2rem; font-weight: 700; }
+
+    .bar-bg {
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      height: 6px;
+    }
+
+    .bar-fill {
+      height: 6px;
+      border-radius: 999px;
+      transition: width 1s ease;
+    }
+
+    .pulse-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    .card-hover {
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.4); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ───────────────────────────────────────────────────────────────── -->
+<div class="max-w-7xl mx-auto px-6 py-8">
+  <div class="flex items-center justify-between mb-10">
+    <div>
+      <h1 class="text-3xl font-bold bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent">
+        Dashboard
+      </h1>
+      <p class="text-slate-500 text-sm mt-1" id="updated-at">Laden...</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="pulse-dot bg-emerald-400"></div>
+      <span class="text-slate-400 text-sm">Live data</span>
+      <button onclick="location.reload()"
+        class="glass px-4 py-2 rounded-xl text-sm text-slate-300 hover:text-white transition-colors">
+        ↻ Vernieuwen
+      </button>
+    </div>
+  </div>
+
+  <!-- ── WHOOP TOP ROW ───────────────────────────────────────────────────────── -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+
+    <!-- Recovery -->
+    <div class="glass rounded-2xl p-5 glow-purple card-hover col-span-2 md:col-span-1">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">Recovery</p>
+      <div class="flex items-center gap-4">
+        <div id="recovery-ring" class="ring-score"
+             style="background: conic-gradient(#8b5cf6 0%, #1e1b4b 0%)">
+          <div class="glass rounded-full w-20 h-20 flex items-center justify-center">
+            <span class="score-text text-violet-300" id="recovery-score">—</span>
+          </div>
+        </div>
+        <div>
+          <p class="text-slate-400 text-xs">%</p>
+          <p class="text-slate-500 text-xs mt-2">Vandaag</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sleep -->
+    <div class="glass rounded-2xl p-5 glow-blue card-hover">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">Slaap</p>
+      <div class="flex flex-col gap-3">
+        <div class="flex items-end gap-1">
+          <span class="text-3xl font-bold text-blue-300" id="sleep-hours">—</span>
+          <span class="text-slate-400 text-sm mb-1">uur</span>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs text-slate-500 mb-1">
+            <span>Prestatie</span>
+            <span id="sleep-perf-label">—%</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill bg-blue-400" id="sleep-perf-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HRV -->
+    <div class="glass rounded-2xl p-5 glow-green card-hover">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">HRV</p>
+      <div class="flex items-end gap-1">
+        <span class="text-3xl font-bold text-emerald-300" id="hrv">—</span>
+        <span class="text-slate-400 text-sm mb-1">ms</span>
+      </div>
+      <p class="text-slate-500 text-xs mt-2">RMSSD</p>
+    </div>
+
+    <!-- Resting HR -->
+    <div class="glass rounded-2xl p-5 glow-orange card-hover">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">Rusthartslag</p>
+      <div class="flex items-end gap-1">
+        <span class="text-3xl font-bold text-orange-300" id="rhr">—</span>
+        <span class="text-slate-400 text-sm mb-1">bpm</span>
+      </div>
+      <p class="text-slate-500 text-xs mt-2">Gisternacht</p>
+    </div>
+
+  </div>
+
+  <!-- ── CHARTS ROW ─────────────────────────────────────────────────────────── -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+    <!-- Strain chart -->
+    <div class="glass rounded-2xl p-5">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-4">Strain – 7 dagen</p>
+      <canvas id="strainChart" height="140"></canvas>
+    </div>
+
+    <!-- HR chart -->
+    <div class="glass rounded-2xl p-5">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-4">Gemiddelde hartslag – 7 dagen</p>
+      <canvas id="hrChart" height="140"></canvas>
+    </div>
+
+  </div>
+
+  <!-- ── GITHUB ROW ─────────────────────────────────────────────────────────── -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <!-- Stats -->
+    <div class="glass rounded-2xl p-5 card-hover">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-4">GitHub</p>
+      <div class="flex flex-col gap-4">
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400 text-sm">Repositories</span>
+          <span class="text-white font-semibold" id="gh-repos">—</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400 text-sm">Followers</span>
+          <span class="text-white font-semibold" id="gh-followers">—</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400 text-sm">Gebruiker</span>
+          <a id="gh-username-link" href="#" target="_blank"
+             class="text-violet-400 font-semibold text-sm hover:text-violet-300 transition-colors">—</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent repos -->
+    <div class="glass rounded-2xl p-5">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-4">Recente repos</p>
+      <div class="flex flex-col gap-3" id="repos-list">
+        <p class="text-slate-600 text-sm">Laden...</p>
+      </div>
+    </div>
+
+    <!-- Recent PRs -->
+    <div class="glass rounded-2xl p-5">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-4">Recente pull requests</p>
+      <div class="flex flex-col gap-3" id="prs-list">
+        <p class="text-slate-600 text-sm">Laden...</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── FOOTER ─────────────────────────────────────────────────────────────── -->
+  <div class="text-center text-slate-700 text-xs mt-8 pb-4">
+    Ververs data: <code class="text-slate-500">python3 fetch_data.py</code>
+  </div>
+
+</div>
+
+<script>
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function colorForScore(score) {
+  if (score >= 67) return '#10b981'; // green
+  if (score >= 34) return '#f59e0b'; // yellow
+  return '#ef4444';                  // red
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+}
+
+function animateNumber(el, target, suffix = '') {
+  let start = 0;
+  const step = target / 40;
+  const interval = setInterval(() => {
+    start = Math.min(start + step, target);
+    el.textContent = Math.round(start) + suffix;
+    if (start >= target) clearInterval(interval);
+  }, 20);
+}
+
+// ── Chart defaults ────────────────────────────────────────────────────────────
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = 'Inter';
+
+// ── Load data.json ────────────────────────────────────────────────────────────
+fetch('data.json')
+  .then(r => {
+    if (!r.ok) throw new Error('data.json not found');
+    return r.json();
+  })
+  .then(data => {
+    renderAll(data);
+  })
+  .catch(() => {
+    renderDemo();
+  });
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderAll(data) {
+  // Updated at
+  if (data.updated_at) {
+    $('updated-at').textContent = 'Bijgewerkt: ' + new Date(data.updated_at).toLocaleString('nl-NL');
+  }
+
+  renderWHOOP(data.whoop || {});
+  renderGitHub(data.github || {});
+}
+
+function renderWHOOP(w) {
+  const recovery = w.recovery_score || 0;
+  const color = colorForScore(recovery);
+
+  // Recovery ring
+  const deg = (recovery / 100) * 360;
+  $('recovery-ring').style.background =
+    `conic-gradient(${color} ${deg}deg, rgba(255,255,255,0.06) ${deg}deg)`;
+  $('recovery-score').style.color = color;
+  animateNumber($('recovery-score'), recovery);
+
+  // Sleep
+  animateNumber($('sleep-hours'), w.sleep_hours || 0, 'h');
+  const sleepPerf = w.sleep_performance || 0;
+  $('sleep-perf-label').textContent = sleepPerf + '%';
+  setTimeout(() => { $('sleep-perf-bar').style.width = sleepPerf + '%'; }, 100);
+
+  // HRV & RHR
+  animateNumber($('hrv'), w.hrv_rmssd || 0);
+  animateNumber($('rhr'), w.resting_heart_rate || 0);
+
+  // Charts
+  const cycles = (w.cycles || []).slice().reverse();
+  const labels = cycles.map(c => formatDate(c.date));
+  const strains = cycles.map(c => c.strain);
+  const hrs = cycles.map(c => c.average_heart_rate);
+
+  new Chart($('strainChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Strain',
+        data: strains,
+        backgroundColor: 'rgba(139,92,246,0.5)',
+        borderColor: 'rgba(139,92,246,0.9)',
+        borderWidth: 1,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 0, max: 21, grid: { color: 'rgba(255,255,255,0.04)' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  new Chart($('hrChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Gem. HR',
+        data: hrs,
+        borderColor: '#f97316',
+        backgroundColor: 'rgba(249,115,22,0.1)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointBackgroundColor: '#f97316',
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { grid: { color: 'rgba(255,255,255,0.04)' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderGitHub(gh) {
+  animateNumber($('gh-repos'), gh.public_repos || 0);
+  animateNumber($('gh-followers'), gh.followers || 0);
+
+  const username = gh.username || '—';
+  $('gh-username-link').textContent = '@' + username;
+  $('gh-username-link').href = `https://github.com/${username}`;
+
+  // Repos
+  const reposList = $('repos-list');
+  reposList.innerHTML = '';
+  (gh.repos || []).slice(0, 4).forEach(r => {
+    reposList.innerHTML += `
+      <a href="${r.url}" target="_blank"
+         class="flex items-center justify-between group">
+        <span class="text-slate-300 text-sm group-hover:text-violet-300 transition-colors truncate max-w-[140px]">
+          ${r.name}
+        </span>
+        <span class="text-slate-600 text-xs">${formatDate(r.pushedAt)}</span>
+      </a>`;
+  });
+  if (!gh.repos?.length) reposList.innerHTML = '<p class="text-slate-600 text-sm">Geen repos gevonden</p>';
+
+  // PRs
+  const prsList = $('prs-list');
+  prsList.innerHTML = '';
+  (gh.recent_prs || []).slice(0, 4).forEach(pr => {
+    const color = pr.state === 'MERGED' ? 'text-violet-400' :
+                  pr.state === 'OPEN'   ? 'text-emerald-400' : 'text-slate-500';
+    const dot   = pr.state === 'MERGED' ? '⬡' :
+                  pr.state === 'OPEN'   ? '●' : '○';
+    prsList.innerHTML += `
+      <a href="${pr.url}" target="_blank"
+         class="flex items-start gap-2 group">
+        <span class="${color} text-xs mt-0.5">${dot}</span>
+        <span class="text-slate-300 text-sm group-hover:text-violet-300 transition-colors leading-snug line-clamp-2">
+          ${pr.title}
+        </span>
+      </a>`;
+  });
+  if (!gh.recent_prs?.length) prsList.innerHTML = '<p class="text-slate-600 text-sm">Geen PRs gevonden</p>';
+}
+
+// ── Demo mode (geen data.json) ────────────────────────────────────────────────
+function renderDemo() {
+  $('updated-at').textContent = 'Geen data gevonden — voer python3 fetch_data.py uit';
+
+  renderWHOOP({
+    recovery_score: 74,
+    hrv_rmssd: 68.4,
+    resting_heart_rate: 52,
+    sleep_performance: 81,
+    sleep_hours: 7.4,
+    cycles: [
+      { date: '2026-05-10', strain: 12.1, average_heart_rate: 98 },
+      { date: '2026-05-11', strain: 8.4,  average_heart_rate: 85 },
+      { date: '2026-05-12', strain: 15.7, average_heart_rate: 112 },
+      { date: '2026-05-13', strain: 6.2,  average_heart_rate: 79 },
+      { date: '2026-05-14', strain: 18.3, average_heart_rate: 124 },
+      { date: '2026-05-15', strain: 11.0, average_heart_rate: 95 },
+      { date: '2026-05-16', strain: 9.5,  average_heart_rate: 88 },
+    ]
+  });
+
+  renderGitHub({
+    username: '9m2k27vfmf-lang',
+    public_repos: 2,
+    followers: 0,
+    repos: [
+      { name: 'image-editor', url: 'https://github.com/9m2k27vfmf-lang/image-editor', pushedAt: '2026-05-16' },
+      { name: 'dashboard',    url: 'https://github.com/9m2k27vfmf-lang/dashboard',    pushedAt: '2026-05-16' },
+    ],
+    recent_prs: [
+      { title: 'Clean up image_editor: English docstring and type hints', state: 'MERGED', url: 'https://github.com/9m2k27vfmf-lang/image-editor/pull/1' },
+    ]
+  });
+}
+</script>
+</body>
+</html>
