@@ -245,9 +245,36 @@ function animateNumber(el, target, suffix = '') {
 }
 
 // ── Chart defaults ────────────────────────────────────────────────────────────
-Chart.defaults.color = '#64748b';
-Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.color = '#475569';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
 Chart.defaults.font.family = 'Inter';
+
+// Shared tooltip style
+const tooltipPlugin = {
+  backgroundColor: 'rgba(15,15,25,0.92)',
+  borderColor: 'rgba(255,255,255,0.08)',
+  borderWidth: 1,
+  titleColor: '#94a3b8',
+  bodyColor: '#e2e8f0',
+  padding: 10,
+  cornerRadius: 10,
+  displayColors: false,
+  titleFont: { size: 10, weight: '500' },
+  bodyFont: { size: 13, weight: '600' },
+};
+
+const sharedScales = {
+  x: {
+    grid: { display: false },
+    border: { display: false },
+    ticks: { font: { size: 10 }, color: '#475569' }
+  },
+  y: {
+    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+    border: { display: false },
+    ticks: { font: { size: 10 }, color: '#475569', maxTicksLimit: 4 }
+  }
+};
 
 // ── Load data.json ────────────────────────────────────────────────────────────
 fetch('data.json')
@@ -304,54 +331,90 @@ function renderWHOOP(w) {
   const strains = cycles.map(c => c.strain);
   const hrs = cycles.map(c => c.average_heart_rate);
 
-  new Chart($('strainChart'), {
+  // ── Strain – gradient bars ──────────────────────────────────────────────────
+  const strainCtx = $('strainChart').getContext('2d');
+  const strainGrad = strainCtx.createLinearGradient(0, 0, 0, 120);
+  strainGrad.addColorStop(0, 'rgba(139,92,246,0.85)');
+  strainGrad.addColorStop(1, 'rgba(109,40,217,0.25)');
+
+  new Chart(strainCtx, {
     type: 'bar',
     data: {
       labels,
       datasets: [{
         label: 'Strain',
         data: strains,
-        backgroundColor: 'rgba(139,92,246,0.5)',
-        borderColor: 'rgba(139,92,246,0.9)',
+        backgroundColor: strainGrad,
+        borderColor: 'rgba(167,139,250,0.6)',
         borderWidth: 1,
-        borderRadius: 6,
+        borderRadius: { topLeft: 6, topRight: 6 },
+        borderSkipped: false,
       }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      layout: { padding: 0 },
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 800, easing: 'easeOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          ...tooltipPlugin,
+          callbacks: {
+            title: ctx => ctx[0].label,
+            label: ctx => `Strain  ${ctx.parsed.y.toFixed(1)}`
+          }
+        }
+      },
+      layout: { padding: { top: 4 } },
       scales: {
-        y: { min: 0, max: 21, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 }, maxTicksLimit: 4 } },
-        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+        ...sharedScales,
+        y: { ...sharedScales.y, min: 0, max: 21 }
       }
     }
   });
 
-  new Chart($('hrChart'), {
+  // ── Heart rate – smooth area line ───────────────────────────────────────────
+  const hrCtx = $('hrChart').getContext('2d');
+  const hrGrad = hrCtx.createLinearGradient(0, 0, 0, 120);
+  hrGrad.addColorStop(0, 'rgba(251,146,60,0.35)');
+  hrGrad.addColorStop(1, 'rgba(251,146,60,0.0)');
+
+  new Chart(hrCtx, {
     type: 'line',
     data: {
       labels,
       datasets: [{
         label: 'Gem. HR',
         data: hrs,
-        borderColor: '#f97316',
-        backgroundColor: 'rgba(249,115,22,0.1)',
+        borderColor: '#fb923c',
+        backgroundColor: hrGrad,
         borderWidth: 2,
-        pointRadius: 3,
-        pointBackgroundColor: '#f97316',
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#fb923c',
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 2,
         fill: true,
-        tension: 0.4,
+        tension: 0.45,
       }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      layout: { padding: 0 },
-      scales: {
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 }, maxTicksLimit: 4 } },
-        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
-      }
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 900, easing: 'easeOutQuart' },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          ...tooltipPlugin,
+          callbacks: {
+            title: ctx => ctx[0].label,
+            label: ctx => `Hartslag  ${ctx.parsed.y} bpm`
+          }
+        }
+      },
+      layout: { padding: { top: 4 } },
+      scales: sharedScales
     }
   });
 }
