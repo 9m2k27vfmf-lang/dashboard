@@ -118,9 +118,9 @@
     <div class="glass rounded-2xl p-5 glow-blue card-hover">
       <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">Slaap</p>
       <div class="flex flex-col gap-3">
-        <div class="flex items-end gap-1">
+        <div class="flex items-end gap-2">
           <span class="text-3xl font-bold text-blue-300" id="sleep-hours">—</span>
-          <span class="text-slate-400 text-sm mb-1">uur</span>
+          <span class="text-slate-400 text-sm mb-1" id="sleep-minutes-label"></span>
         </div>
         <div>
           <div class="flex justify-between text-xs text-slate-500 mb-1">
@@ -284,8 +284,12 @@ function renderWHOOP(w) {
   $('recovery-score').style.color = color;
   animateNumber($('recovery-score'), recovery);
 
-  // Sleep
-  animateNumber($('sleep-hours'), w.sleep_hours || 0, 'h');
+  // Sleep — toon als "7u 24m"
+  const totalMin = w.sleep_minutes || Math.round((w.sleep_hours || 0) * 60);
+  const sleepH = Math.floor(totalMin / 60);
+  const sleepM = totalMin % 60;
+  $('sleep-hours').textContent = sleepH + 'u';
+  $('sleep-minutes-label').textContent = sleepM + 'm';
   const sleepPerf = w.sleep_performance || 0;
   $('sleep-perf-label').textContent = sleepPerf + '%';
   setTimeout(() => { $('sleep-perf-bar').style.width = sleepPerf + '%'; }, 100);
@@ -402,7 +406,7 @@ function renderDemo() {
     hrv_rmssd: 68.4,
     resting_heart_rate: 52,
     sleep_performance: 81,
-    sleep_hours: 7.4,
+    sleep_minutes: 444,
     cycles: [
       { date: '2026-05-10', strain: 12.1, average_heart_rate: 98 },
       { date: '2026-05-11', strain: 8.4,  average_heart_rate: 85 },

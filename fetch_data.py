@@ -60,10 +60,10 @@ def fetch_whoop() -> dict:
         "hrv_rmssd": round(rec_score.get("hrv_rmssd_milli", 0), 1),
         "resting_heart_rate": rec_score.get("resting_heart_rate", 0),
         "sleep_performance": sleep_score.get("sleep_performance_percentage", 0),
-        "sleep_hours": round((latest_sleep.get("end", "") and latest_sleep.get("start", "")
-                              and (datetime.fromisoformat(latest_sleep["end"].replace("Z", "+00:00")) -
-                                   datetime.fromisoformat(latest_sleep["start"].replace("Z", "+00:00"))).seconds / 3600)
-                             if latest_sleep.get("end") and latest_sleep.get("start") else 0, 1),
+        "sleep_minutes": int((
+            (datetime.fromisoformat(latest_sleep["end"].replace("Z", "+00:00")) -
+             datetime.fromisoformat(latest_sleep["start"].replace("Z", "+00:00"))).seconds // 60
+        ) if latest_sleep.get("end") and latest_sleep.get("start") else 0),
         "cycles": cycles,
     }
 
