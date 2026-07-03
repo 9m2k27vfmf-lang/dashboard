@@ -28,15 +28,6 @@
     .glow-blue   { box-shadow: 0 0 30px rgba(59,130,246,0.15); }
     .glow-orange { box-shadow: 0 0 30px rgba(251,146,60,0.15); }
 
-    .ring-score {
-      width: 120px; height: 120px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      position: relative;
-    }
-
-    .score-text { font-size: 2rem; font-weight: 700; }
-
     .bar-bg {
       background: rgba(255,255,255,0.08);
       border-radius: 999px;
@@ -79,6 +70,9 @@
     .d-2 { animation-delay: .12s; }
     .d-3 { animation-delay: .19s; }
     .d-4 { animation-delay: .26s; }
+    .d-5 { animation-delay: .33s; }
+    .d-6 { animation-delay: .40s; }
+    .d-7 { animation-delay: .47s; }
 
     /* SVG recovery ring */
     .ring-arc {
@@ -191,7 +185,7 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
     <!-- Strain chart -->
-    <div class="glass rounded-2xl p-4">
+    <div class="glass rounded-2xl p-4 fade-up d-3">
       <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">Strain – 7 dagen</p>
       <div style="position:relative; height:90px;">
         <canvas id="strainChart"></canvas>
@@ -199,7 +193,7 @@
     </div>
 
     <!-- HR chart -->
-    <div class="glass rounded-2xl p-4">
+    <div class="glass rounded-2xl p-4 fade-up d-4">
       <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">Gemiddelde hartslag – 7 dagen</p>
       <div style="position:relative; height:90px;">
         <canvas id="hrChart"></canvas>
@@ -212,7 +206,7 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
     <!-- Stats -->
-    <div class="glass rounded-2xl p-5 card-hover">
+    <div class="glass rounded-2xl p-5 card-hover fade-up d-4">
       <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-4">GitHub</p>
       <div class="flex flex-col gap-4">
         <div class="flex justify-between items-center">
@@ -232,7 +226,7 @@
     </div>
 
     <!-- Recent repos -->
-    <div class="glass rounded-2xl p-5">
+    <div class="glass rounded-2xl p-5 fade-up d-5">
       <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-4">Recente repos</p>
       <div class="flex flex-col gap-3" id="repos-list">
         <p class="text-slate-600 text-sm">Laden...</p>
@@ -240,7 +234,7 @@
     </div>
 
     <!-- Recent PRs -->
-    <div class="glass rounded-2xl p-5">
+    <div class="glass rounded-2xl p-5 fade-up d-6">
       <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-4">Recente pull requests</p>
       <div class="flex flex-col gap-3" id="prs-list">
         <p class="text-slate-600 text-sm">Laden...</p>
@@ -253,7 +247,7 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
     <!-- Status -->
-    <div class="glass rounded-2xl p-5 card-hover">
+    <div class="glass rounded-2xl p-5 card-hover fade-up d-5">
       <div class="flex items-center justify-between mb-4">
         <p class="text-slate-400 text-xs font-medium uppercase tracking-widest">Claude</p>
         <div class="flex items-center gap-2">
@@ -274,28 +268,35 @@
     </div>
 
     <!-- CPU -->
-    <div class="glass rounded-2xl p-5 glow-orange card-hover">
+    <div class="glass rounded-2xl p-5 glow-orange card-hover fade-up d-6">
       <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">CPU gebruik</p>
-      <div class="flex items-center gap-4">
-        <div id="claude-cpu-ring" class="ring-score"
-             style="background: conic-gradient(#fb923c 0%, #1e1b4b 0%)">
-          <div class="glass rounded-full w-20 h-20 flex items-center justify-center">
-            <span class="score-text text-orange-300" id="claude-cpu-score">—</span>
+      <div class="flex items-center gap-5">
+        <div class="relative w-[104px] h-[104px] shrink-0">
+          <svg viewBox="0 0 104 104" class="w-full h-full -rotate-90">
+            <circle cx="52" cy="52" r="45" fill="none"
+                    stroke="rgba(255,255,255,0.06)" stroke-width="9"/>
+            <circle id="claude-cpu-arc" class="ring-arc" cx="52" cy="52" r="45" fill="none"
+                    stroke="#fb923c" stroke-width="9" stroke-linecap="round"
+                    stroke-dasharray="282.74" stroke-dashoffset="282.74"/>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-2xl font-bold leading-none" id="claude-cpu-score">—</span>
+            <span class="text-slate-500 text-[10px] uppercase tracking-wider mt-1">%</span>
           </div>
         </div>
         <div>
-          <p class="text-slate-400 text-xs">%</p>
-          <p class="text-slate-500 text-xs mt-2">Som van alle processen</p>
+          <p class="text-slate-300 text-sm font-medium" id="claude-cpu-label">—</p>
+          <p class="text-slate-500 text-xs mt-1">Som van alle processen</p>
         </div>
       </div>
     </div>
 
     <!-- RAM -->
-    <div class="glass rounded-2xl p-5 glow-blue card-hover">
+    <div class="glass rounded-2xl p-5 glow-blue card-hover fade-up d-7">
       <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">RAM gebruik</p>
       <div class="flex flex-col gap-3">
         <div class="flex items-end gap-2">
-          <span class="text-3xl font-bold text-blue-300" id="claude-ram-mb">—</span>
+          <span class="text-3xl font-bold val-blue" id="claude-ram-mb">—</span>
           <span class="text-slate-400 text-sm mb-1">MB</span>
         </div>
         <div>
@@ -303,7 +304,10 @@
             <span>% van systeem</span>
             <span id="claude-ram-perc-label">—%</span>
           </div>
-          <div class="bar-bg"><div class="bar-fill bg-blue-400" id="claude-ram-bar" style="width:0%"></div></div>
+          <div class="bar-bg">
+            <div class="bar-fill" id="claude-ram-bar"
+                 style="width:0%; background: linear-gradient(90deg,#38bdf8,#818cf8); box-shadow: 0 0 10px rgba(56,189,248,0.45);"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -412,13 +416,22 @@ function renderClaude(c) {
     ? (c.total_ram_mb / 1024).toFixed(1) + ' GB'
     : '—';
 
-  // CPU ring — cap visual at 100% but show real value as text
+  // CPU ring — SVG arc, kleur op basis van belasting (visueel gemaxt op 100%)
   const cpu = Math.max(0, c.cpu_percent || 0);
-  const cpuCapped = Math.min(cpu, 100);
-  const cpuDeg = (cpuCapped / 100) * 360;
-  $('claude-cpu-ring').style.background =
-    `conic-gradient(#fb923c ${cpuDeg}deg, rgba(255,255,255,0.06) ${cpuDeg}deg)`;
+  const cpuColor = cpu >= 80 ? '#ef4444' : cpu >= 50 ? '#fb923c' : '#34d399';
+  const cpuArc = $('claude-cpu-arc');
+  const cpuCircumference = 282.74; // 2π × r(45)
+  cpuArc.style.stroke = cpuColor;
+  cpuArc.style.filter = `drop-shadow(0 0 6px ${cpuColor}88)`;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    cpuArc.style.strokeDashoffset = cpuCircumference * (1 - Math.min(cpu, 100) / 100);
+  }));
+  $('claude-cpu-score').style.color = cpuColor;
   $('claude-cpu-score').textContent = cpu.toFixed(0);
+  $('claude-cpu-label').textContent =
+    cpu >= 80 ? 'Zware belasting' :
+    cpu >= 50 ? 'Actief bezig' :
+    cpu > 0   ? 'Rustig' : 'Inactief';
 
   // RAM
   animateNumber($('claude-ram-mb'), c.ram_mb || 0);
