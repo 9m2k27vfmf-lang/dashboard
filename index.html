@@ -46,7 +46,7 @@
     .bar-fill {
       height: 6px;
       border-radius: 999px;
-      transition: width 1s ease;
+      transition: width 1.2s cubic-bezier(.22,1,.36,1);
     }
 
     .pulse-dot {
@@ -61,11 +61,34 @@
     }
 
     .card-hover {
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s ease, border-color 0.35s ease;
     }
     .card-hover:hover {
-      transform: translateY(-2px);
+      transform: translateY(-3px);
+      border-color: rgba(255,255,255,0.16);
     }
+
+    /* Staggered entrance */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: fadeUp 0.7s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    @keyframes fadeUp { to { opacity: 1; transform: none; } }
+    .d-1 { animation-delay: .05s; }
+    .d-2 { animation-delay: .12s; }
+    .d-3 { animation-delay: .19s; }
+    .d-4 { animation-delay: .26s; }
+
+    /* SVG recovery ring */
+    .ring-arc {
+      transition: stroke-dashoffset 1.3s cubic-bezier(.22,1,.36,1), stroke .6s ease;
+    }
+
+    /* Gradient value text */
+    .val-blue   { background: linear-gradient(135deg,#7dd3fc,#60a5fa); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .val-green  { background: linear-gradient(135deg,#6ee7b7,#34d399); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .val-orange { background: linear-gradient(135deg,#fdba74,#fb923c); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
     /* Scrollbar */
     ::-webkit-scrollbar { width: 4px; }
@@ -98,28 +121,35 @@
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 
     <!-- Recovery -->
-    <div class="glass rounded-2xl p-5 glow-purple card-hover col-span-2 md:col-span-1">
+    <div class="glass rounded-2xl p-5 glow-purple card-hover fade-up d-1 col-span-2 md:col-span-1">
       <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">Recovery</p>
-      <div class="flex items-center gap-4">
-        <div id="recovery-ring" class="ring-score"
-             style="background: conic-gradient(#8b5cf6 0%, #1e1b4b 0%)">
-          <div class="glass rounded-full w-20 h-20 flex items-center justify-center">
-            <span class="score-text text-violet-300" id="recovery-score">—</span>
+      <div class="flex items-center gap-5">
+        <div class="relative w-[104px] h-[104px] shrink-0">
+          <svg viewBox="0 0 104 104" class="w-full h-full -rotate-90">
+            <circle cx="52" cy="52" r="45" fill="none"
+                    stroke="rgba(255,255,255,0.06)" stroke-width="9"/>
+            <circle id="recovery-arc" class="ring-arc" cx="52" cy="52" r="45" fill="none"
+                    stroke="#8b5cf6" stroke-width="9" stroke-linecap="round"
+                    stroke-dasharray="282.74" stroke-dashoffset="282.74"/>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-2xl font-bold leading-none" id="recovery-score">—</span>
+            <span class="text-slate-500 text-[10px] uppercase tracking-wider mt-1">%</span>
           </div>
         </div>
         <div>
-          <p class="text-slate-400 text-xs">%</p>
-          <p class="text-slate-500 text-xs mt-2">Vandaag</p>
+          <p class="text-slate-300 text-sm font-medium" id="recovery-label">—</p>
+          <p class="text-slate-500 text-xs mt-1">Vandaag</p>
         </div>
       </div>
     </div>
 
     <!-- Sleep -->
-    <div class="glass rounded-2xl p-5 glow-blue card-hover">
+    <div class="glass rounded-2xl p-5 glow-blue card-hover fade-up d-2">
       <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">Slaap</p>
       <div class="flex flex-col gap-3">
         <div class="flex items-end gap-2">
-          <span class="text-3xl font-bold text-blue-300" id="sleep-hours">—</span>
+          <span class="text-3xl font-bold val-blue" id="sleep-hours">—</span>
           <span class="text-slate-400 text-sm mb-1" id="sleep-minutes-label"></span>
         </div>
         <div>
@@ -127,26 +157,29 @@
             <span>Prestatie</span>
             <span id="sleep-perf-label">—%</span>
           </div>
-          <div class="bar-bg"><div class="bar-fill bg-blue-400" id="sleep-perf-bar" style="width:0%"></div></div>
+          <div class="bar-bg">
+            <div class="bar-fill" id="sleep-perf-bar"
+                 style="width:0%; background: linear-gradient(90deg,#38bdf8,#818cf8); box-shadow: 0 0 10px rgba(56,189,248,0.45);"></div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- HRV -->
-    <div class="glass rounded-2xl p-5 glow-green card-hover">
+    <div class="glass rounded-2xl p-5 glow-green card-hover fade-up d-3">
       <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">HRV</p>
       <div class="flex items-end gap-1">
-        <span class="text-3xl font-bold text-emerald-300" id="hrv">—</span>
+        <span class="text-3xl font-bold val-green" id="hrv">—</span>
         <span class="text-slate-400 text-sm mb-1">ms</span>
       </div>
       <p class="text-slate-500 text-xs mt-2">RMSSD</p>
     </div>
 
     <!-- Resting HR -->
-    <div class="glass rounded-2xl p-5 glow-orange card-hover">
+    <div class="glass rounded-2xl p-5 glow-orange card-hover fade-up d-4">
       <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">Rusthartslag</p>
       <div class="flex items-end gap-1">
-        <span class="text-3xl font-bold text-orange-300" id="rhr">—</span>
+        <span class="text-3xl font-bold val-orange" id="rhr">—</span>
         <span class="text-slate-400 text-sm mb-1">bpm</span>
       </div>
       <p class="text-slate-500 text-xs mt-2">Gisternacht</p>
@@ -216,6 +249,67 @@
 
   </div>
 
+  <!-- ── CLAUDE USAGE ROW ───────────────────────────────────────────────────── -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <!-- Status -->
+    <div class="glass rounded-2xl p-5 card-hover">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-slate-400 text-xs font-medium uppercase tracking-widest">Claude</p>
+        <div class="flex items-center gap-2">
+          <div id="claude-dot" class="pulse-dot bg-slate-600"></div>
+          <span id="claude-status" class="text-slate-500 text-xs">—</span>
+        </div>
+      </div>
+      <div class="flex flex-col gap-4">
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400 text-sm">Processen</span>
+          <span class="text-white font-semibold" id="claude-procs">—</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-slate-400 text-sm">Totaal RAM systeem</span>
+          <span class="text-white font-semibold" id="claude-total-ram">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CPU -->
+    <div class="glass rounded-2xl p-5 glow-orange card-hover">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">CPU gebruik</p>
+      <div class="flex items-center gap-4">
+        <div id="claude-cpu-ring" class="ring-score"
+             style="background: conic-gradient(#fb923c 0%, #1e1b4b 0%)">
+          <div class="glass rounded-full w-20 h-20 flex items-center justify-center">
+            <span class="score-text text-orange-300" id="claude-cpu-score">—</span>
+          </div>
+        </div>
+        <div>
+          <p class="text-slate-400 text-xs">%</p>
+          <p class="text-slate-500 text-xs mt-2">Som van alle processen</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RAM -->
+    <div class="glass rounded-2xl p-5 glow-blue card-hover">
+      <p class="text-slate-400 text-xs font-medium uppercase tracking-widest mb-3">RAM gebruik</p>
+      <div class="flex flex-col gap-3">
+        <div class="flex items-end gap-2">
+          <span class="text-3xl font-bold text-blue-300" id="claude-ram-mb">—</span>
+          <span class="text-slate-400 text-sm mb-1">MB</span>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs text-slate-500 mb-1">
+            <span>% van systeem</span>
+            <span id="claude-ram-perc-label">—%</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill bg-blue-400" id="claude-ram-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
   <!-- ── FOOTER ─────────────────────────────────────────────────────────────── -->
   <div class="text-center text-slate-700 text-xs mt-8 pb-4">
     Ververs data: <code class="text-slate-500">python3 fetch_data.py</code>
@@ -239,13 +333,15 @@ function formatDate(iso) {
 }
 
 function animateNumber(el, target, suffix = '') {
-  let start = 0;
-  const step = target / 40;
-  const interval = setInterval(() => {
-    start = Math.min(start + step, target);
-    el.textContent = Math.round(start) + suffix;
-    if (start >= target) clearInterval(interval);
-  }, 20);
+  const duration = 600;
+  const t0 = performance.now();
+  function frame(now) {
+    const t = Math.min((now - t0) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+    el.textContent = Math.round(target * eased) + suffix;
+    if (t < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
 }
 
 // ── Chart defaults ────────────────────────────────────────────────────────────
@@ -302,18 +398,54 @@ function renderAll(data) {
 
   renderWHOOP(data.whoop || {});
   renderGitHub(data.github || {});
+  renderClaude(data.claude || {});
+}
+
+function renderClaude(c) {
+  const running = !!c.running;
+  $('claude-dot').className = 'pulse-dot ' + (running ? 'bg-emerald-400' : 'bg-slate-600');
+  $('claude-status').textContent = running ? 'Actief' : 'Niet actief';
+  $('claude-status').className = 'text-xs ' + (running ? 'text-emerald-400' : 'text-slate-500');
+
+  animateNumber($('claude-procs'), c.process_count || 0);
+  $('claude-total-ram').textContent = c.total_ram_mb
+    ? (c.total_ram_mb / 1024).toFixed(1) + ' GB'
+    : '—';
+
+  // CPU ring — cap visual at 100% but show real value as text
+  const cpu = Math.max(0, c.cpu_percent || 0);
+  const cpuCapped = Math.min(cpu, 100);
+  const cpuDeg = (cpuCapped / 100) * 360;
+  $('claude-cpu-ring').style.background =
+    `conic-gradient(#fb923c ${cpuDeg}deg, rgba(255,255,255,0.06) ${cpuDeg}deg)`;
+  $('claude-cpu-score').textContent = cpu.toFixed(0);
+
+  // RAM
+  animateNumber($('claude-ram-mb'), c.ram_mb || 0);
+  const ramPerc = c.ram_percent || 0;
+  $('claude-ram-perc-label').textContent = ramPerc.toFixed(1) + '%';
+  setTimeout(() => {
+    $('claude-ram-bar').style.width = Math.min(ramPerc, 100) + '%';
+  }, 100);
 }
 
 function renderWHOOP(w) {
   const recovery = w.recovery_score || 0;
   const color = colorForScore(recovery);
 
-  // Recovery ring
-  const deg = (recovery / 100) * 360;
-  $('recovery-ring').style.background =
-    `conic-gradient(${color} ${deg}deg, rgba(255,255,255,0.06) ${deg}deg)`;
+  // Recovery ring — SVG arc met vloeiende draw-in animatie
+  const arc = $('recovery-arc');
+  const circumference = 282.74; // 2π × r(45)
+  arc.style.stroke = color;
+  arc.style.filter = `drop-shadow(0 0 6px ${color}88)`;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    arc.style.strokeDashoffset = circumference * (1 - Math.min(recovery, 100) / 100);
+  }));
   $('recovery-score').style.color = color;
   animateNumber($('recovery-score'), recovery);
+  $('recovery-label').textContent =
+    recovery >= 67 ? 'Goed hersteld' :
+    recovery >= 34 ? 'Redelijk hersteld' : 'Laag herstel';
 
   // Sleep — toon als "7u 24m"
   const totalMin = w.sleep_minutes || Math.round((w.sleep_hours || 0) * 60);
@@ -560,6 +692,15 @@ function renderDemo() {
     recent_prs: [
       { title: 'Clean up image_editor: English docstring and type hints', state: 'MERGED', url: 'https://github.com/9m2k27vfmf-lang/image-editor/pull/1' },
     ]
+  });
+
+  renderClaude({
+    running: true,
+    process_count: 14,
+    cpu_percent: 43.2,
+    ram_mb: 1620,
+    ram_percent: 9.8,
+    total_ram_mb: 16384,
   });
 }
 </script>

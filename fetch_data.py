@@ -1,5 +1,5 @@
 """
-Fetch WHOOP + GitHub data and save to data.json for the dashboard.
+Fetch WHOOP + GitHub + Claude data and save to data.json for the dashboard.
 Run: python3 fetch_data.py
 """
 
@@ -12,7 +12,15 @@ from pathlib import Path
 import requests
 from whoop_auth import get_access_token
 
-WHOOP_BASE = "https://api.prod.whoop.com/developer/v1"
+# Physical RAM in MB (used to calc RAM percentage)
+def _total_ram_mb() -> int:
+    try:
+        out = subprocess.run(["sysctl", "-n", "hw.memsize"], capture_output=True, text=True)
+        return int(out.stdout.strip()) // (1024 * 1024)
+    except Exception:
+        return 16384  # sensible fallback (16 GB)
+
+WHOOP_BASE = "https://api.prod.whoop.com/developer/v2"
 GITHUB_USER = "9m2k27vfmf-lang"
 DATA_FILE = Path(__file__).parent / "data.json"
 
@@ -104,21 +112,75 @@ def fetch_github() -> dict:
         return {"username": GITHUB_USER, "public_repos": 0, "followers": 0, "repos": [], "recent_prs": []}
 
 
+# ── Claude (CPU + RAM) ─────────────────────────────────────────────────────────
+
+def fetch_claude() -> dict:
+    """Aggregate CPU% and RAM (RSS) for every running Claude process."""
+    try:
+        result = subprocess.run(
+            ["ps", "-axo", "pid,pcpu,rss,comm"],
+            capture_output=True, text=True
+        )
+        if result.returncode != 0:
+            return {"running": False, "process_count": 0, "cpu_percent": 0.0,
+                    "ram_mb": 0, "ram_percent": 0.0, "total_ram_mb": _total_ram_mb()}
+
+        cpu_total = 0.0
+        rss_total_kb = 0  # ps reports rss in KB on macOS
+        count = 0
+
+        for line in result.stdout.splitlines()[1:]:
+            parts = line.strip().split(None, 3)
+            if len(parts) < 4:
+                continue
+            _, pcpu, rss, comm = parts
+            # Match any Claude-related binary path
+            if "/Claude.app/" in comm or "/claude-code/" in comm or comm.endswith("/claude"):
+                try:
+                    cpu_total += float(pcpu)
+                    rss_total_kb += int(rss)
+                    count += 1
+                except ValueError:
+                    continue
+
+        total_ram_mb = _total_ram_mb()
+        ram_mb = rss_total_kb // 1024
+        ram_percent = (ram_mb / total_ram_mb * 100) if total_ram_mb else 0.0
+
+        return {
+            "running": count > 0,
+            "process_count": count,
+            "cpu_percent": round(cpu_total, 1),
+            "ram_mb": ram_mb,
+            "ram_percent": round(ram_percent, 1),
+            "total_ram_mb": total_ram_mb,
+        }
+    except Exception as e:
+        print(f"  Claude fetch error: {e}")
+        return {"running": False, "process_count": 0, "cpu_percent": 0.0,
+                "ram_mb": 0, "ram_percent": 0.0, "total_ram_mb": _total_ram_mb()}
+
+
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
     print("Fetching WHOOP data...")
     whoop = fetch_whoop()
-    print(f"  Recovery: {whoop['recovery_score']}%  Sleep: {whoop['sleep_hours']}h  HRV: {whoop['hrv_rmssd']}ms")
+    print(f"  Recovery: {whoop['recovery_score']}%  HRV: {whoop['hrv_rmssd']}ms")
 
     print("Fetching GitHub data...")
     github = fetch_github()
     print(f"  Repos: {github['public_repos']}  PRs: {len(github['recent_prs'])}")
 
+    print("Fetching Claude stats...")
+    claude = fetch_claude()
+    print(f"  Processes: {claude['process_count']}  CPU: {claude['cpu_percent']}%  RAM: {claude['ram_mb']} MB")
+
     data = {
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "whoop": whoop,
         "github": github,
+        "claude": claude,
     }
 
     DATA_FILE.write_text(json.dumps(data, indent=2))
